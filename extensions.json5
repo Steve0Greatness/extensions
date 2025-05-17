@@ -1,0 +1,41 @@
+[
+  {
+    path: "extra-timers",
+    title: "Extra Timers",
+    description: "Allows for the creation and management of several timers in PenguinMod.",
+    
+    image: "timers.svg",
+    versions: {
+      current: "1.1",
+      past: []
+    },
+
+    contributors: [
+      {
+        name: "Steve0Greatness",
+        website: "https://steve0greatness.nekoweb.org/",
+        notes: "developer"
+      },
+    ],
+
+    license: {
+      extension: "MIT",
+      image: "MIT"
+    },
+    incompatible: [
+      {
+        type: "editor",
+        value: "TurboWarp",
+        broken: true,
+        reason: "Uses a PenguinMod specific API."
+      },
+      {
+        type: "extension",
+        value: "Custom Styles",
+        broken: false,
+        reason: "Uses a similar method to overwrite the stage monitor color."
+      }
+    ],
+  },
+
+]

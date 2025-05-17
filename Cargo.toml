@@ -1,0 +1,9 @@
+[package]
+name = "extensiongallery"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+json5 = "0.4.1"
+minijinja = "2.10.2"
+serde = { version = "1.0.219", features = ["derive"] }

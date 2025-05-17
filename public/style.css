@@ -1,0 +1,55 @@
+ul:has(li > div[popover]) {
+    margin: 0;
+    padding: 0;
+    & > li {
+        width: auto;
+        display: inline-block;
+        list-style: none;
+        table {
+            max-width: 300px;
+        }
+
+        [popover] {
+            border: 1px solid black;
+            padding: 0;
+
+            main {
+                padding: 8px;
+                padding-top: 4px;
+            }
+            &::backdrop {
+                background-color: #0009;
+                backdrop-filter: blur(5px);
+            }
+            ul {
+                list-style: disc;
+            }
+            header {
+                display: flex;
+                padding: 4px;
+                padding-bottom: 2px;
+                border-bottom: 1px solid black;
+                background-color: #efefef;
+                
+                strong, button {
+                    flex: 1;
+                }
+                button {
+                    background: none;
+                    border: none;
+                    padding: 0;
+                    text-align: right;
+                    span {
+                        background-color: #faa;
+                        padding: 2px;
+                        border-radius: 100%;
+                        width: 16px;
+                        display: inline-block;
+                        text-align: center;
+                    }
+                }
+                
+            }
+        }
+    }
+}

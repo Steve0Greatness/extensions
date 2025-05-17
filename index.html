@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <title>Extensions</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <p>Extensions for PenguinMod and TurboWarp.</p>
+    <ul>
+        {% for ext in extensions %}
+        <li id="{{ext.path}}">
+            <div id="{{ext.path}}-popover" popover="popover">
+                <header>
+                    <strong>{{ext.title}} Information</strong>
+                    <button popovertarget="{{ext.path}}-popover"><span>X</span></button>
+                </header>
+                <main>
+
+                <dl>
+                    {% if ext.documentation %}
+                    <dt>Documenation</dt>
+                    <dd><a href="{{ext.documenation}}">{{ext.documenation}}</a></dd>
+                    {% endif %}
+                    {% if ext.website %}
+                    <dt>Website</dt>
+                    <dd><a href="{{ext.website}}">{{ext.website}}</a></dd>
+                    {% endif %}
+                    {% if ext.source %}
+                    <dt>Source code</dt>
+                    <dd><a href="{{ext.source}}">{{ext.source}}</a></dd>
+                    {% endif %}
+                </dl>
+                <strong>Incompatible with...</strong>
+                <ul>
+                    {% for compat in ext.incompatible %}
+                    <li>
+                        {% if compat.broken %}<p><strong>Critical!</strong></p>{% endif %}
+                        <p>Incompatible with the {{compat.type}} {{compat.value}}. {{compat.reason}}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <strong>Contributors</strong>
+                <ul>
+                    {% for contrib in ext.contributors %}
+                    <li>
+                        <a href="{{contrib.website}}">{{contrib.name}}</a>
+                        {% if contrib.notes %}
+                        <p>{{contrib.notes}}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <strong>License</strong>
+                <dl>
+                    <dt>Extension code</dt>
+                    <dd>{{ext.license.extension}}</dd>
+                    <dt>Thumbnail</dt>
+                    <dd>{{ext.license.image}}</dd>
+                </dl>
+                {% if ext.examples %}
+                <strong>Example projects</strong>
+                <ul>
+                    {% for example in ext.examples %}
+                    <li>
+                        <strong>{{example.name}}</strong>
+                        {% if example.description %}
+                        <p>{{example.description}}</p>
+                        {% endif %}
+                        <a
+                            href="{{extensions_directory}}/{{ext.path}}/{{example.path}}"
+                            download="download"
+                        ></a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                </main>
+            </div>
+            <table>
+                <tr>
+                    <td colspan="2">
+                        <img
+                            src="{{extensions_directory}}/{{ext.path}}/{{ext.image}}"
+                            width="334"
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <th colspan="2">
+                        {{ext.title}}
+                    </th>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        {{ext.description}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a
+                            href="{{extensions_directory}}/{{ext.path}}/{{ext.versions.current}}.js"
+                        >Source</a>
+                    </td>
+                    <td>
+                        <button popovertarget="{{ext.path}}-popover">Info</button>
+                    </td>
+                </tr>
+            </table>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
