@@ -28,12 +28,6 @@
         value: "TurboWarp",
         broken: true,
         reason: "Uses a PenguinMod specific API."
-      },
-      {
-        type: "extension",
-        value: "Custom Styles",
-        broken: false,
-        reason: "Uses a similar method to overwrite the stage monitor color."
       }
     ],
   },
