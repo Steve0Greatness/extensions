@@ -62,7 +62,11 @@
                 <ul>
                     {% for contrib in ext.contributors %}
                     <li>
+                        {% if contrib.website %}
                         <a href="{{contrib.website}}">{{contrib.name}}</a>
+                        {% else %}
+                        {{contrib.name}}
+                        {% endif %}
                         {% if contrib.notes %}
                         <p>{{contrib.notes}}</p>
                         {% endif %}

@@ -16,6 +16,10 @@
         website: "https://steve0greatness.nekoweb.org/",
         notes: "developer"
       },
+      {
+        name: "Dillon",
+        notes: "thumbnail"
+      },
     ],
 
     license: {

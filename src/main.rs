@@ -49,7 +49,7 @@ struct Versions {
 #[derive(Deserialize, Serialize, Debug)]
 struct Contributor {
     name: String,
-    website: String,
+    website: Option<String>,
     notes: Option<String>
 }
 #[derive(Deserialize, Serialize, Debug)]
