@@ -18,6 +18,7 @@
 ul:has(li > div[popover]) {
     margin: 0;
     padding: 0;
+    display: flex;
     & > li {
         width: auto;
         display: inline-block;
