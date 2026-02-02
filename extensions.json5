@@ -35,5 +35,36 @@
       }
     ],
   },
+  {
+    path: "complex-plane",
+    title: "Complex Plane",
+    description: "Interact with the complex plane.",
 
+    image: "ComplexPlane.png",
+    versions: {
+      current: "0.5",
+      past: []
+    },
+
+    contributors: [
+      {
+        name: "Steve0Greatness",
+        website: "https://steve0greatness.nekoweb.org/",
+        notes: "developer"
+      },
+    ],
+
+    license: {
+      extension: "LGPL-v3-only",
+      image: "CC BY-SA"
+    },
+    incompatible: [
+      {
+        type: "editor",
+        value: "TurboWarp",
+        broken: false,
+        reason: "Visual difference: Reporter content is less pretty, otherwise works fine."
+      }
+    ],
+  },
 ]
