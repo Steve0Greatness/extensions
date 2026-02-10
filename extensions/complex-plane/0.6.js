@@ -1,3 +1,8 @@
+/**
+ * @author Steve0Greatness <steve0greatnessiscool@gmail.com>
+ * @license LGPL-v3-only
+ * @version 0.6
+ */
 (function(Scratch){
 
 const self_id = "s0gcomplexplane";
@@ -276,7 +281,7 @@ class ComplexPlane {
       blocks: [
         {
           opcode: "complex_define",
-          text: "[RE] + [IM]i",
+          text: "[RE] + [IM]\u{1D456}",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
             RE: {
@@ -292,7 +297,7 @@ class ComplexPlane {
         "---",
         {
           opcode: "re",
-          text: "Re [COMP_A]",
+          text: "\u{211C}\u{1D522} [COMP_A]",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
             COMP_A: {
@@ -314,7 +319,7 @@ class ComplexPlane {
         },
         {
           opcode: "im",
-          text: "Im [COMP_A]",
+          text: "\u{2111}\u{1D52A} [COMP_A]",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
             COMP_A: {
@@ -343,10 +348,12 @@ class ComplexPlane {
             COMP_A: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: -3,
             },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 4,
             }
           }
         },
@@ -358,10 +365,12 @@ class ComplexPlane {
             COMP_A: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 1,
             },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 4,
             }
           }
         },
@@ -373,10 +382,12 @@ class ComplexPlane {
             COMP_A: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 5,
             },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 2,
             }
           }
         },
@@ -388,25 +399,29 @@ class ComplexPlane {
             COMP_A: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 10,
             },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 5,
             }
           }
         },
         {
           opcode: "root",
-          text: "[COMP_B] √ [COMP_A]",
+          text: "[COMP_B] \u{221A} [COMP_A]",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 4,
+            },
+            COMP_A: {
+              type: Scratch.ArgumentType.NUMBER,
+              exemptFromNormalization: true,
+              defaultValue: 16,
             }
           }
         },
@@ -418,26 +433,30 @@ class ComplexPlane {
             COMP_A: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 2,
             },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
+              defaultValue: 4,
             }
           }
         },
         {
           opcode: "log",
-          text: "log base [COMP_B]: [COMP_A]",
+          text: "log base [COMP_B] of [COMP_A]",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
             COMP_B: {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
-            }
+              defaultValue: 2,
+            },
+            COMP_A: {
+              type: Scratch.ArgumentType.NUMBER,
+              exemptFromNormalization: true,
+              defaultValue: 16,
+            },
           }
         },
 
@@ -476,6 +495,10 @@ class ComplexPlane {
         {
           opcode: "pi",
           text: "\u{1D7B9}",
+          blockType: Scratch.BlockType.REPORTER
+        },
+        {
+          opcode: "e",
           blockType: Scratch.BlockType.REPORTER
         },
       ],
@@ -585,6 +608,10 @@ class ComplexPlane {
 
   pi() {
     return Math.PI;
+  }
+
+  e() {
+    return Math.E;
   }
 }
 
