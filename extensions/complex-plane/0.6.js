@@ -276,13 +276,6 @@ class Complex {
   valueOf() {
     return this.toString();
   }
-
-  toJSON() {
-    return {
-      "RE": this.RE,
-      "IM": this.IM,
-    };
-  }
 }
 
 function is_real_number(val) {
@@ -309,6 +302,17 @@ function scientific(num) {
 
 class ComplexPlane {
   runtime = Scratch.vm.runtime;
+  type = Complex;
+  constructor() {
+    this.runtime.registerSerializer(
+      self_id + "_number",
+      complex => ({
+        "RE": complex.RE,
+        "IM": complex.IM,
+      }),
+      complex => new Complex(complex.RE, complex.IM)
+    );
+  }
   getInfo() {
     return {
       id: self_id,
