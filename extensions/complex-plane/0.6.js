@@ -9,26 +9,21 @@ const self_id = "s0gcomplexplane";
 
 class Complex {
   customId = self_id + "_number";
-  /**
-   * @private
-   */
-  _real = 0;
-  /**
-   * @private
-   */
-  _imaginary = 0;
+
+  #real = 0;
+  #imaginary = 0;
 
   get RE() {
-    return this._real;
+    return this.real;
   }
 
   get IM() {
-    return this._imaginary;
+    return this.imaginary;
   }
 
   constructor(RE, IM) {
-    this._real = RE ?? 0;
-    this._imaginary = IM ?? 0;
+    this.real = RE ?? 0;
+    this.imaginary = IM ?? 0;
   }
 
   /**
@@ -208,6 +203,31 @@ class Complex {
   }
 
   /**
+   * sin(z) in radians
+   * @returns {Complex}
+   */
+  get sin() {
+    const comp_exp = this
+      .mul(new Complex(0, 1)).exp;
+    const conj_exp = this
+      .mul(new Complex(0, -1)).exp;
+    return comp_exp.sub(conj_exp)
+      .div(new Complex(0, 2));
+  }
+  /**
+   * cos(z) in radians
+   * @returns {Complex}
+   */
+  get cos() {
+    const comp_exp = this
+      .mul(new Complex(0, 1)).exp;
+    const conj_exp = this
+      .mul(new Complex(0, -1)).exp;
+    return comp_exp.add(conj_exp)
+      .div(new Complex(2, 0));
+  }
+
+  /**
    * @priv
    * @returns {string}
    */
@@ -257,6 +277,9 @@ function is_real_number(val) {
 }
 
 /**
+ * Puts a given number into scientific notation when JavaScript
+ * would've put an "e" into the number.
+ *
  * returns {HTMLElement|string}
  */
 function scientific(num) {
@@ -589,20 +612,9 @@ class ComplexPlane {
     case "ln":
       return Complex.complexify(COMP).ln;
     case "sin":
+      return Complex.complexify(COMP).sin;
     case "cos":
-      const comp_exp = Complex.complexify(COMP)
-          .mul(new Complex(0, 1)).exp;
-      const conj_exp = Complex.complexify(COMP)
-          .mul(new Complex(0, -1)).exp;
-
-      switch (FUNC) {
-      case "sin":
-          return comp_exp.sub(conj_exp)
-            .div(new Complex(0, 2));
-      case "cos":
-          return comp_exp.add(conj_exp)
-            .div(new Complex(2, 0));
-      }
+      return Complex.complexify(COMP).cos;
     }
   }
 
