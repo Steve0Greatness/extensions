@@ -276,6 +276,13 @@ class Complex {
   valueOf() {
     return this.toString();
   }
+
+  toJSON() {
+    return {
+      "RE": this.RE,
+      "IM": this.IM,
+    };
+  }
 }
 
 function is_real_number(val) {
