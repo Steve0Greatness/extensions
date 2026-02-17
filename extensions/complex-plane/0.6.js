@@ -207,24 +207,20 @@ class Complex {
    * @returns {Complex}
    */
   get sin() {
-    const comp_exp = this
-      .mul(new Complex(0, 1)).exp;
-    const conj_exp = this
-      .mul(new Complex(0, -1)).exp;
-    return comp_exp.sub(conj_exp)
-      .div(new Complex(0, 2));
+    return new Complex(
+      Math.sin(this.RE) * Math.cosh(this.IM),
+      Math.cos(this.RE) * Math.sinh(this.IM)
+    );
   }
   /**
    * cos(z) in radians
    * @returns {Complex}
    */
   get cos() {
-    const comp_exp = this
-      .mul(new Complex(0, 1)).exp;
-    const conj_exp = this
-      .mul(new Complex(0, -1)).exp;
-    return comp_exp.add(conj_exp)
-      .div(new Complex(2, 0));
+    return new Complex(
+      Math.cos(this.RE) * Math.cosh(this.IM),
+      -Math.sin(this.RE) * Math.sinh(this.IM)
+    );
   }
 
   /**
