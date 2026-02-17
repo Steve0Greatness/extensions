@@ -67,7 +67,7 @@ class Complex {
    * @returns {Boolean}
    */
   get is_nan() {
-    return this.abs == NaN;
+    return isNaN(this.abs);
   }
 
   /**
@@ -244,8 +244,18 @@ class Complex {
   toReporterContent() {
     const display = document.createElement("span");
 
-    const imaginary_unit = document.createElement("em");
-    imaginary_unit.innerText = "i";
+    if (this.is_zero) {
+      display.append("0");
+      return display;
+    }
+
+    if (this.is_nan) {
+      display.append("NaN");
+      return display;
+    }
+
+    const imaginary_unit = document.createElement("span");
+    imaginary_unit.innerText = "\u{1D456}";
 
     if (this.RE != 0)
       display.append(scientific(this.RE))
