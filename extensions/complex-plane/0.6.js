@@ -520,6 +520,11 @@ class ComplexPlane {
           opcode: "e",
           blockType: Scratch.BlockType.REPORTER
         },
+        {
+          opcode: "i",
+          text: "\u{1D456}",
+          blockType: Scratch.BlockType.REPORTER
+        },
       ],
       menus: {
         FUNCS: {
@@ -620,6 +625,10 @@ class ComplexPlane {
 
   e() {
     return Math.E;
+  }
+
+  i() {
+    return new Complex(0, 1);
   }
 }
 
