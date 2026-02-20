@@ -42,7 +42,7 @@
 
     image: "ComplexPlane.png",
     versions: {
-      current: "0.6",
+      current: "0.7",
       past: []
     },
 

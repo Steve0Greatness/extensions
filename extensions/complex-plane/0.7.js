@@ -1,7 +1,7 @@
 /**
  * @author Steve0Greatness <steve0greatnessiscool@gmail.com>
  * @license LGPL-v3-only
- * @version 0.6
+ * @version 0.7
  */
 (function(Scratch){
 
