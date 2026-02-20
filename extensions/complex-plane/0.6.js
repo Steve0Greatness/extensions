@@ -8,6 +8,14 @@
 const self_id = "s0gcomplexplane";
 
 class Complex {
+  /**
+   * RegExp used for the `fromString` method to make sure the number is valid.
+   * @returns {RegExp}
+   */
+  static get REGEXP() {
+    return /^(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)\+(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)i$/;
+  }
+
   customId = self_id + "_number";
 
   #real = 0;
@@ -33,8 +41,9 @@ class Complex {
    */
   static complexify(val) {
     if (val instanceof Complex) return val;
-    if (is_real_number(val)) return new Complex(Scratch.Cast.toNumber(val), 0);
-    return new Complex(0, 0);
+    if (is_real_number(val)) return new Complex(Scratch.Cast.toNumber(val));
+    if (typeof val == "string") return Complex.fromString(val);
+    return Complex.ZERO;
   }
 
   /**
@@ -90,7 +99,10 @@ class Complex {
    * @returns {Complex}
    */
   mul(w) {
-    return new Complex((this.RE * w.RE - this.IM * w.IM), (this.IM * w.RE + this.RE * w.IM));
+    return new Complex(
+      (this.RE * w.RE - this.IM * w.IM),
+      (this.IM * w.RE + this.RE * w.IM)
+    );
   }
 
   /**
@@ -235,7 +247,19 @@ class Complex {
    * @returns {string}
    */
   toString() {
-    return this.RE.toString() + this.__operation__ + this.IM.toString() + "i";
+    return this.RE.toString() + this.__operation__ + Math.abs(this.IM).toString() + "i";
+  }
+
+  /**
+   * Attempts to parse a complex number as a string.
+   * TODO this function is fairly primitive at current moment. Might be a good
+   *      idea to redo it at some point.
+   * @returns {Complex}
+   */
+  static fromString(str) {
+    const parts = Complex.REGEXP.exec(str);
+    if (!parts) return Complex.ZERO;
+    return new Complex(parseFloat(parts[0]), parseFloat(parts[1]));
   }
 
   /**
@@ -276,10 +300,14 @@ class Complex {
   valueOf() {
     return this.toString();
   }
+
+  static get ZERO() {
+    return new Complex(0)
+  }
 }
 
 function is_real_number(val) {
-  return typeof val === "number" || typeof val === "string";
+  return typeof val === "number";
 }
 
 /**
@@ -304,14 +332,15 @@ class ComplexPlane {
   runtime = Scratch.vm.runtime;
   type = Complex;
   constructor() {
-    this.runtime.registerSerializer(
-      self_id + "_number",
-      complex => ({
-        "RE": complex.RE,
-        "IM": complex.IM,
-      }),
-      complex => new Complex(complex.RE, complex.IM)
-    );
+    if (this.runtime.registerSerializer)
+      this.runtime?.registerSerializer(
+        self_id + "_number",
+        complex => ({
+          "RE": complex.RE,
+          "IM": complex.IM,
+        }),
+        complex => new Complex(complex.RE, complex.IM)
+      );
   }
   getInfo() {
     return {
@@ -319,6 +348,18 @@ class ComplexPlane {
       name: "Complex Plane",
       color1: "#4cce5e",
       blocks: [
+        {
+          blockType: Scratch.BlockType.LABEL,
+          text: `Usage warning: This extension is experimental`
+        },
+        {
+          blockType: Scratch.BlockType.LABEL,
+          text: `and is subject to change. Do not use this in`
+        },
+        {
+          blockType: Scratch.BlockType.LABEL,
+          text: `production projects.`
+        },
         {
           opcode: "complex_define",
           text: "[RE] + [IM]\u{1D456}",
@@ -332,51 +373,6 @@ class ComplexPlane {
               type: Scratch.ArgumentType.NUMBER,
               exemptFromNormalization: true,
             }
-          }
-        },
-        "---",
-        {
-          opcode: "re",
-          text: "\u{211C}\u{1D522} [COMP_A]",
-          blockType: Scratch.BlockType.REPORTER,
-          arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
-          }
-        },
-        {
-          opcode: "all_re",
-          text: "is [COMP_A] all real?",
-          blockType: Scratch.BlockType.BOOLEAN,
-          arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
-          }
-        },
-        {
-          opcode: "im",
-          text: "\u{2111}\u{1D52A} [COMP_A]",
-          blockType: Scratch.BlockType.REPORTER,
-          arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
-          }
-        },
-        {
-          opcode: "all_im",
-          text: "is [COMP_A] all imaginary?",
-          blockType: Scratch.BlockType.BOOLEAN,
-          arguments: {
-            COMP_A: {
-              type: Scratch.ArgumentType.NUMBER,
-              exemptFromNormalization: true,
-            },
           }
         },
         "---",
@@ -570,6 +566,14 @@ class ComplexPlane {
               text: "cosine",
               value: "cos"
             },
+            {
+              text: "\u{211C}\u{1D522}",
+              value: "real",
+            },
+            {
+              text: "\u{2111}\u{1D52A}",
+              value: "imag"
+            }
           ]
         }
       }
@@ -603,20 +607,6 @@ class ComplexPlane {
     return Complex.complexify(COMP_A).log_with_base(Complex.complexify(COMP_B));
   }
 
-  re({COMP_A}) {
-    return Complex.complexify(COMP_A).RE;
-  }
-  im({COMP_A}) {
-    return Complex.complexify(COMP_A).IM;
-  }
-
-  all_re({COMP_A}) {
-    return Complex.complexify(COMP_A).all_real;
-  }
-  all_im({COMP_A}) {
-    return Complex.complexify(COMP_A).all_imaginary;
-  }
-
   comp({COMP_A, COMP_B}) {
     return Complex.complexify(COMP_A).compare(Complex.complexify(COMP_B));
   }
@@ -637,6 +627,10 @@ class ComplexPlane {
       return Complex.complexify(COMP).sin;
     case "cos":
       return Complex.complexify(COMP).cos;
+    case "real":
+      return Complex.complexify(COMP).RE;
+    case "imag":
+      return Complex.complexify(COMP).IM;
     }
   }
 
