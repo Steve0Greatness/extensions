@@ -16,8 +16,6 @@ class Complex {
     return /^(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)\+(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)i$/;
   }
 
-  customId = self_id + "_number";
-
   #real = 0;
   #imaginary = 0;
 
@@ -32,6 +30,8 @@ class Complex {
   constructor(RE, IM) {
     this.real = RE ?? 0;
     this.imaginary = IM ?? 0;
+    if (Scratch.extensions.isPenguinMod)
+      this.customId = self_id + "_number";
   }
 
   /**
@@ -233,6 +233,49 @@ class Complex {
       Math.cos(this.RE) * Math.cosh(this.IM),
       -Math.sin(this.RE) * Math.sinh(this.IM)
     );
+  }
+
+  static get HALF() {
+    return new Complex(0.5);
+  }
+
+  static get EULER_CONST() {
+    return new Complex(0.5772156649015329);
+  }
+
+  static get LOG2() {
+    return new Complex(Math.log(2));
+  }
+
+  static get ONE() {
+    return new Complex(1);
+  }
+
+  static get NEGATIVE() {
+    return new Complex(-1);
+  }
+
+  
+  /**
+   * Determines the value of $\ln\Gamma(z)$ then raised $e$ to it.
+   *
+   * **Note**: This is really slow, because the convergance isn't fast at all.
+   * @returns {Complex}
+   */
+  get gamma() {
+    let sum = Complex.ZERO;
+    for (let index = 1; index < 10000000; index++) {
+      const prime = this.div(new Complex(index));
+      sum = sum.add(
+        prime.sub(Complex.ONE.add(prime).ln)
+      );
+    }
+    return Complex.EULER_CONST
+      .mul(Complex.NEGATIVE)
+      .mul(this)
+      .sub(this.ln)
+      .add(sum)
+      .exp;
   }
 
   /**
@@ -573,6 +616,10 @@ class ComplexPlane {
             {
               text: "\u{2111}\u{1D52A}",
               value: "imag"
+            },
+            {
+              text: "\u{1D6AA}",
+              value: "gamma"
             }
           ]
         }
@@ -612,25 +659,28 @@ class ComplexPlane {
   }
 
   funcs({COMP, FUNC}) {
+    var Z = Complex.complexify(COMP);
     switch (FUNC) {
     case "abs":
-      return Complex.complexify(COMP).abs;
+      return Z.abs;
     case "arg":
-      return Complex.complexify(COMP).arg;
+      return Z.arg;
     case "conj":
-      return Complex.complexify(COMP).conj;
+      return Z.conj;
     case "exp":
-      return Complex.complexify(COMP).exp;
+      return Z.exp;
     case "ln":
-      return Complex.complexify(COMP).ln;
+      return Z.ln;
     case "sin":
-      return Complex.complexify(COMP).sin;
+      return Z.sin;
     case "cos":
-      return Complex.complexify(COMP).cos;
+      return Z.cos;
     case "real":
-      return Complex.complexify(COMP).RE;
+      return Z.RE;
     case "imag":
-      return Complex.complexify(COMP).IM;
+      return Z.IM;
+    case "gamma":
+      return Z.gamma;
     }
   }
 
