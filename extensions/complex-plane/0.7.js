@@ -7,13 +7,129 @@
 
 const self_id = "s0gcomplexplane";
 
+var lanczos_precision_modifier = 5;
+var lanczos_coefficient_count_ = 5;
+  
+let Chebyshev = new Map([
+  ["1,1", 1], ["2,2", 1],
+]);
+
+function find_value(x, y) {
+  // C[1,1] = 1
+  // C[2,2] = 1
+  // C[n+1,1] = -C[n-1,1]
+  // C[n+1,n+1] = 2C[n,n]
+  // C[n+1][m+1] = 2C[n,m]-C[n-1,m+1]
+  const record_value = val => {
+    Chebyshev.set(x+","+y, val);
+    return val;
+  }
+  if (Chebyshev.has(x+","+y)) return Chebyshev.get(x+","+y);
+  if (y == 1) return record_value(-find_value(x-2,1));
+  if (x == y) return record_value(2 * find_value(x-1,x-1));
+  if (x > y > 0) return record_value(2 * find_value(x-1,y-1) - find_value(x-2,y))
+  throw "Couldn't find value with recursive formula";
+};
+
+function double_factorial(n) {
+  let product = 1;
+  for (let i = 0; i <= Math.ceil(n/2)-1; i++)
+    product *= n - 2 * i;
+  return n;
+}
+
+const SQRT2_over_PI = Math.sqrt(2)/Math.PI;
+
+function calculate_coefficients() {
+  let coefficients = [];
+
+  for (let i = 0; i < lanczos_coefficient_count_; i++) {
+    var coefficient = 0;
+    for (let l = 0; l <= i; l++) {
+      const Chebyshev_coefficient = find_value(2*i+1, 2*l+1);
+      const F = (
+          double_factorial(2*l-1)
+          * Math.exp(l + lanczos_precision_modifier + 0.5)
+        )
+        / (
+          Math.pow(2, l)
+          * Math.pow(l + lanczos_precision_modifier + 0.5, l + 0.5)
+        );
+      coefficient += Chebyshev_coefficient * F;
+    }
+
+    coefficients.push(coefficient * SQRT2_over_PI);
+  }
+
+  return coefficients;
+}
+
+const lanczos_coefficients = calculate_coefficients();
+
 class Complex {
+  static Precomputed = new Map([
+    ["ZERO", new Complex(0)],
+    ["HALF", new Complex(0.5)],
+    ["EULER_CONST", new Complex(0.5772156649015329)],
+    ["LOG2", new Complex(Math.log(2))],
+    ["SQRT2PI", new Complex(Math.sqrt(2*Math.PI))],
+    ["ONE", new Complex(1)],
+    ["NEGATIVE", new Complex(-1)],
+    ["SQRT2_OVER_PI", new Complex(Math.SQRT2/Math.PI)],
+    ["TWO", new Complex(2)],
+    ["I", new Complex(0,1)],
+  ]);
+
   /**
    * RegExp used for the `fromString` method to make sure the number is valid.
    * @returns {RegExp}
    */
   static get REGEXP() {
     return /^(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)\+(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)i$/;
+  }
+
+  static get ZERO() {
+    return Complex.Precomputed.get("ZERO");
+  }
+
+  static get HALF() {
+    return Complex.Precomputed.get("HALF");
+  }
+
+  static get ONE() {
+    return Complex.Precomputed.get("ONE");
+  }
+
+  static get I() {
+    return Complex.Precomputed.get("I");
+  }
+
+  static get TWO() {
+    return Complex.Precomputed.get("TWO");
+  }
+
+  static get EULER_CONST() {
+    return Complex.Precomputed.get("EULER_CONST");
+  }
+
+  static get LOG2() {
+    return Complex.Precomputed.get("LOG2");
+  }
+
+  static get NEGATIVE() {
+    return Complex.Precomputed.get("NEGATIVE");
+  }
+
+  static get SQRT2PI() {
+    return Complex.Precomputed.get("SQRT2PI");
+  }
+
+  static get PRECISION_MODIFIER_PRIME() {
+    return new Complex(lanczos_precision_modifier+0.5);
+  }
+
+  static get SQRT2_OVER_PI() {
+    return Complex.Precomputed.get("SQRT2_OVER_PI");
   }
 
   #real = 0;
@@ -215,7 +331,7 @@ class Complex {
   }
 
   /**
-   * sin(z) in radians
+   * Complex sine in radians
    * @returns {Complex}
    */
   get sin() {
@@ -225,7 +341,7 @@ class Complex {
     );
   }
   /**
-   * cos(z) in radians
+   * Complex cosine in radians
    * @returns {Complex}
    */
   get cos() {
@@ -234,32 +350,56 @@ class Complex {
       -Math.sin(this.RE) * Math.sinh(this.IM)
     );
   }
-
-  static get HALF() {
-    return new Complex(0.5);
+  /**
+   * Complex tangent function in radians
+   * @returns {Complex}
+   */
+  get tan() {
+    return this.sin.div(this.cos);
   }
 
-  static get EULER_CONST() {
-    return new Complex(0.5772156649015329);
+  /**
+   * Complex inverse sine
+   */
+  get arcsin() {
+    const hypot = Complex.ONE
+      .sub(this.pow(Complex.TWO))
+      .pow(Complex.HALF);
+      
+    return hypot.sub(Complex.I.mul(this)).ln.mul(Complex.I);
   }
 
-  static get LOG2() {
-    return new Complex(Math.log(2));
+  /**
+   * Complex inverse cosine
+   */
+  get arccos() {
+    const hypot = Complex.ONE
+      .sub(this.pow(Complex.TWO))
+      .pow(Complex.HALF);
+      
+    return this.sub(Complex.I.mul(hypot)).ln.mul(Complex.I);
   }
 
-  static get ONE() {
-    return new Complex(1);
+  /**
+   * Complex inverse tangent
+   */
+  get arctan() {
+    return new Complex(0, -0.5)
+      .mul(
+        this
+          .add(Complex.I)
+          .div(this.sub(I))
+          .ln
+      );
   }
 
-  static get NEGATIVE() {
-    return new Complex(-1);
-  }
 
-  
+
   /**
    * Determines the value of $\ln\Gamma(z)$ then raised $e$ to it.
    *
-   * **Note**: This is really slow, because the convergance isn't fast at all.
+   * TODO Reimplement using another, faster converging, series. Likely Lanczos
+   * approximation.
    * @returns {Complex}
    */
   get gamma() {
@@ -276,6 +416,34 @@ class Complex {
       .sub(this.ln)
       .add(sum)
       .exp;
+  }
+
+  static get LANCZOS_COEFFICIENTS() {
+    return lanczos_coefficients;
+  }
+
+  get gamma2() {
+    const z = this.sub(1);
+
+    const z_prime = this.add(Complex.PRECISION_MODIFIER_PRIME);
+    
+    const nonsummation = Complex.SQRT2PI
+      .mul(
+        z_prime.pow(z.add(Complex.HALF))
+      )
+      .mul(
+        z_prime.mul(Complex.NEGATIVE).exp
+      );
+
+    // TODO implement the A function. I'll need to figure out a way of
+    // calculating the coefficients.
+    
+    var sum = Complex.LANCZOS_COEFFICIENTS[0];
+    for (let i = 1; i < lanczos_coefficient_count_; i++) {
+      
+    }
+
+    return sum.mul(nonsummation);
   }
 
   /**
@@ -342,10 +510,6 @@ class Complex {
   */
   valueOf() {
     return this.toString();
-  }
-
-  static get ZERO() {
-    return new Complex(0)
   }
 }
 
@@ -661,26 +825,12 @@ class ComplexPlane {
   funcs({COMP, FUNC}) {
     var Z = Complex.complexify(COMP);
     switch (FUNC) {
-    case "abs":
-      return Z.abs;
-    case "arg":
-      return Z.arg;
-    case "conj":
-      return Z.conj;
-    case "exp":
-      return Z.exp;
-    case "ln":
-      return Z.ln;
-    case "sin":
-      return Z.sin;
-    case "cos":
-      return Z.cos;
     case "real":
       return Z.RE;
     case "imag":
       return Z.IM;
-    case "gamma":
-      return Z.gamma;
+    default:
+      return Z[FUNC];
     }
   }
 
