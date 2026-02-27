@@ -7,65 +7,6 @@
 
 const self_id = "s0gcomplexplane";
 
-var lanczos_precision_modifier = 5;
-var lanczos_coefficient_count_ = 5;
-  
-let Chebyshev = new Map([
-  ["1,1", 1], ["2,2", 1],
-]);
-
-function find_value(x, y) {
-  // C[1,1] = 1
-  // C[2,2] = 1
-  // C[n+1,1] = -C[n-1,1]
-  // C[n+1,n+1] = 2C[n,n]
-  // C[n+1][m+1] = 2C[n,m]-C[n-1,m+1]
-  const record_value = val => {
-    Chebyshev.set(x+","+y, val);
-    return val;
-  }
-  if (Chebyshev.has(x+","+y)) return Chebyshev.get(x+","+y);
-  if (y == 1) return record_value(-find_value(x-2,1));
-  if (x == y) return record_value(2 * find_value(x-1,x-1));
-  if (x > y > 0) return record_value(2 * find_value(x-1,y-1) - find_value(x-2,y))
-  throw "Couldn't find value with recursive formula";
-};
-
-function double_factorial(n) {
-  let product = 1;
-  for (let i = 0; i <= Math.ceil(n/2)-1; i++)
-    product *= n - 2 * i;
-  return n;
-}
-
-const SQRT2_over_PI = Math.sqrt(2)/Math.PI;
-
-function calculate_coefficients() {
-  let coefficients = [];
-
-  for (let i = 0; i < lanczos_coefficient_count_; i++) {
-    var coefficient = 0;
-    for (let l = 0; l <= i; l++) {
-      const Chebyshev_coefficient = find_value(2*i+1, 2*l+1);
-      const F = (
-          double_factorial(2*l-1)
-          * Math.exp(l + lanczos_precision_modifier + 0.5)
-        )
-        / (
-          Math.pow(2, l)
-          * Math.pow(l + lanczos_precision_modifier + 0.5, l + 0.5)
-        );
-      coefficient += Chebyshev_coefficient * F;
-    }
-
-    coefficients.push(coefficient * SQRT2_over_PI);
-  }
-
-  return coefficients;
-}
-
-const lanczos_coefficients = calculate_coefficients();
-
 class Complex {
   static Precomputed = new Map([
     ["ZERO", new Complex(0)],
@@ -78,6 +19,8 @@ class Complex {
     ["SQRT2_OVER_PI", new Complex(Math.SQRT2/Math.PI)],
     ["TWO", new Complex(2)],
     ["I", new Complex(0,1)],
+    ["E", new Complex(Math.E)],
+    ["PI", new Complex(Math.PI)],
   ]);
 
   /**
@@ -86,6 +29,10 @@ class Complex {
    */
   static get REGEXP() {
     return /^(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)\+(\-?[\d]*(?:\.[\d]+)?(?:e\d+)?)i$/;
+  }
+
+  static get PI() {
+    return Complex.Precomputed.get("PI");
   }
 
   static get ZERO() {
@@ -130,6 +77,10 @@ class Complex {
 
   static get SQRT2_OVER_PI() {
     return Complex.Precomputed.get("SQRT2_OVER_PI");
+  }
+
+  static get E() {
+    return Complex.Precomputed.get("E");
   }
 
   #real = 0;
@@ -416,34 +367,6 @@ class Complex {
       .sub(this.ln)
       .add(sum)
       .exp;
-  }
-
-  static get LANCZOS_COEFFICIENTS() {
-    return lanczos_coefficients;
-  }
-
-  get gamma2() {
-    const z = this.sub(1);
-
-    const z_prime = this.add(Complex.PRECISION_MODIFIER_PRIME);
-    
-    const nonsummation = Complex.SQRT2PI
-      .mul(
-        z_prime.pow(z.add(Complex.HALF))
-      )
-      .mul(
-        z_prime.mul(Complex.NEGATIVE).exp
-      );
-
-    // TODO implement the A function. I'll need to figure out a way of
-    // calculating the coefficients.
-    
-    var sum = Complex.LANCZOS_COEFFICIENTS[0];
-    for (let i = 1; i < lanczos_coefficient_count_; i++) {
-      
-    }
-
-    return sum.mul(nonsummation);
   }
 
   /**
@@ -845,6 +768,12 @@ class ComplexPlane {
   i() {
     return new Complex(0, 1);
   }
+}
+
+function factorial(n) {
+  var prod = 1;
+  for (let i = 1; i <= n; i++) prod *= n;
+  return prod;
 }
 
 Scratch.extensions.register(new ComplexPlane());
