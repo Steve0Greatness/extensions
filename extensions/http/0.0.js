@@ -10,8 +10,10 @@ const self_id = "s0gRequests";
 const vm = Scratch.vm;
 
 const TextEncoding = {
-  encode: new TextEncoder().encode,
-  decode: new TextDecoder().decode,
+  encoder: new TextEncoder(),
+  decoder: new TextDecoder(),
+  encode: function(input) { return this.encoder.encode(input); },
+  decode: function(input) { return this.decoder.decode(input); },
 };
 
 class ResponseType {
