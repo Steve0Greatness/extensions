@@ -1,11 +1,27 @@
 /**
  * @author Steve0Greatness <steve0greatnessiscool@gmail.com>
  * @license LGPL-v3-only
- * @version 0.7
+ * @version 0.8
  */
 (function(Scratch){
 
 const self_id = "s0gcomplexplane";
+
+const g = 8
+const p = [
+    0.9999999999999999298,
+    1975.3739023578852322,
+    -4397.3823927922428918,
+    3462.6328459862717019,
+    -1156.9851431631167820,
+    154.53815050252775060,
+    -6.2536716123689161798,
+    0.034642762454736807441,
+    -7.4776171974442977377e-7,
+    6.3041253821852264261e-8,
+    -2.7405717035683877489e-8,
+    4.0486948817567609101e-9
+]
 
 class Complex {
   static Precomputed = new Map([
@@ -21,6 +37,7 @@ class Complex {
     ["I", new Complex(0,1)],
     ["E", new Complex(Math.E)],
     ["PI", new Complex(Math.PI)],
+    ["TAU", new Complex(2*Math.PI)],
   ]);
 
   /**
@@ -81,6 +98,10 @@ class Complex {
 
   static get E() {
     return Complex.Precomputed.get("E");
+  }
+
+  static get TAU() {
+    return Complex.Precomputed.get("TAU");
   }
 
   #real = 0;
@@ -344,29 +365,47 @@ class Complex {
       );
   }
 
-
-
   /**
-   * Determines the value of $\ln\Gamma(z)$ then raised $e$ to it.
-   *
-   * TODO Reimplement using another, faster converging, series. Likely Lanczos
-   * approximation.
+   * Determines gamma with Weierstrass' definition.
    * @returns {Complex}
    */
   get gamma() {
-    let sum = Complex.ZERO;
-    for (let index = 1; index < 10000000; index++) {
-      const prime = this.div(new Complex(index));
+    var product = Complex.ONE;
+    for (let index = 1; index < 500000; index++) {
+      var z_over_i = this.div(new Complex(index));
+      product = product.mul(Complex.ONE.add(z_over_i).mul(z_over_i.mul(Complex.NEGATIVE).exp));
+    }
+    return Complex.ONE.div(Complex.EULER_CONST.mul(this).exp.mul(this).mul(product));
+  }
+
+  /**
+   * Determines gamma.
+   * @returns {Complex}
+   */
+  get gamma2() {
+    const z = this.sub(Complex.ONE);
+    if (this.RE < 0.5)
+      return Complex.PI
+        .div(
+          Complex.PI.mul(this).sin
+          .mul(
+            Complex.ONE.sub(this).gamma2
+          )
+        );
+    var sum = new Complex(p[0]);
+    for (let i = 1; i < p.length; i++) {
       sum = sum.add(
-        prime.sub(Complex.ONE.add(prime).ln)
+        new Complex(p[i])
+          .div(this.add(new Complex(i)))
       );
     }
-    return Complex.EULER_CONST
-      .mul(Complex.NEGATIVE)
-      .mul(this)
-      .sub(this.ln)
-      .add(sum)
-      .exp;
+    const z_prime = this.add(new Complex(g + 0.5));
+    return Complex.SQRT2PI
+      .mul(
+        z_prime.pow(this.add(Complex.HALF))
+      ).mul(
+        z_prime.mul(Complex.NEGATIVE).exp
+      ).mul(sum);
   }
 
   /**
