@@ -6,6 +6,7 @@
  */
 (function(Scratch){
 
+const self_id = "s0gRequests";
 const vm = Scratch.vm;
 
 const TextEncoding = {
@@ -51,6 +52,9 @@ class ResponseType {
   }
   text() {
     return this.#body.text();
+  }
+  arrayBuffer() {
+    return this.#body.arrayBuffer();
   }
   async base64() {
     return (await this.bytes()).toBase64();
@@ -98,14 +102,114 @@ class ResponseType {
   }
 }
 
+class RequestType {
+  /**
+   * @type {Map<string, string>}
+   */
+  headers = new Map();
+  /**
+   * @type {URL}
+   */
+  url;
+  /**
+   * @type {string}
+   */
+  #type = "application/octet-stream";
+
+  /**
+   * @type {null|string|ArrayBuffer}
+   */
+  #body = null;
+
+  /**
+   * @param {string} url
+   */
+  constructor(url) {
+    this.url = new URL(url);
+  }
+  
+  get type() {
+    return this.#type;
+  }
+  set type(type) {
+    this.#type = type;
+    this.headers.set("Content-Type", type);
+  }
+
+  set_header(header, value) {
+    if (typeof header !== "string" || typeof value !== "string")
+      throw new Error("Invalid header details: both request headers and their contents must be plaintext.");
+    this.headers.set(header, value)
+  }
+
+  get status() {
+    return 0;
+  }
+  get status_text() {
+    return "UNSENT";
+  }
+
+  async send() {
+    Object.fromEntries(header.entries())
+  }
+
+  set_body(body) {
+    if (typeof body === "string" || body instanceof ArrayBuffer) {
+      this.#body = body;
+      return;
+    }
+    this.#body = body?.toArrayBuffer?.() || JSON.stringify(body?.toJSON?.());
+  }
+
+  // Body getters; these are made to work identically to the
+  // ones under ResponseType.
+  bytes() {
+    return new Promise((res, rej) => {
+      if (this.#body == null) return res(new Uint8Array());
+    
+      if (this.#body instanceof ArrayBuffer)
+        return res(new Uint8Array(this.#body));
+      
+      res(TextEncoding.encode(this.#body));
+    });
+  }
+  text() {
+    return new Promise((res, rej) => {
+      if (this.#body == null) return res("");
+      if (typeof this.#body === "string")
+        return res(this.#body);
+      if (this.#body instanceof ArrayBuffer)
+        return res(TextEncoding.decode(new Uint8Array(this.#body)));
+      res("FAIL")
+    });
+  }
+  arrayBuffer() {
+    return new Promise((res, rej) => {
+      if (this.#body == null) return res(new ArrayBuffer());
+
+      if (this.#body instanceof ArrayBuffer)
+        return res(this.#body);
+      res(TextEncoding.encode(this.#body).buffer)
+    });
+  }
+  async base64() {
+    return (await this.bytes()).toBase64();
+  }
+  async hex() {
+    return (await this.bytes()).toHex();
+  }
+  
+  // APIs
+  toReporterContent() {
+    const container = document.createElement("div");
+    container.append("prebuilt request to ", this.url);
+    return container;
+  }
+}
+
 class Requests {
   constructor() {
-    if (!vm.jwArray)
-      vm.extensionManager.loadExtensionURL("jwArray");
-    if (!vm.dogeiscutObject)
-      vm.extensionManager.loadExtensionURL(
-        "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js"
-      );
+    vm.runtime.registerCompiledExtensionBlocks(self_id, this.getCompileInfo());
   }
 
   async fetch(url, options) {
@@ -117,7 +221,7 @@ class Requests {
   getInfo() {
     return {
       name: "Requests",
-      id: "s0grequests",
+      id: self_id,
       blocks: [
         {
           text: "get [URL]",
@@ -132,7 +236,7 @@ class Requests {
         },
         "---",
         {
-          text: "get body as [TYPE] from response [RESPONSE]",
+          text: "get body as [TYPE] from [RESPONSE]",
           opcode: "get_response_body",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
@@ -142,7 +246,7 @@ class Requests {
           }
         },
         {
-          text: "get [PROP] from response [RESPONSE]",
+          text: "get [PROP] from [RESPONSE]",
           opcode: "get_response_property",
           blockType: Scratch.BlockType.REPORTER,
           arguments: {
@@ -152,18 +256,73 @@ class Requests {
           }
         },
         {
-          text: "headers of response [RESPONSE]",
+          text: "headers of [RESPONSE]",
           opcode: "get_response_headers",
-          ...vm.dogeiscutObject.Block,
+          ...(
+            vm?.dogeiscutObject?.Block
+            ?? {
+              blockType: Scratch.BlockType.REPORTER,
+              blockShape: Scratch.BlockShape.PLUS
+            }
+          ),
           arguments: {}
+        },
+        "---",
+        {
+          opcode: "current_request",
+          text: "current request",
+          blockType: Scratch.BlockType.REPORTER,
+          hideFromPalette: true,
+          canDragDuplicate: true,
+        },
+        {
+          opcode: "request_builder",
+          text: "build request to [URL] [CURRENT]",
+          blockType: Scratch.BlockType.REPORTER,
+          branches: [{}],
+          arguments: {
+            URL: {
+              type: Scratch.ArgumentType.STRING
+            },
+            CURRENT: {
+              fillIn: "current_request"
+            }
+          }
+        },
+        {
+          opcode: "builder_set_current_body",
+          text: "set current request body to [BODY]",
+          blockType: Scratch.BlockType.COMMAND,
+          arguments: {
+            BODY: {
+              type: Scratch.ArgumentType.STRING,
+              exemptFromNormalization: true,
+            }
+          }
+        },
+        {
+          opcode: "builder_set_current_header",
+          text: "set header [HEADER] to [VALUE] in current request",
+          blockType: Scratch.BlockType.COMMAND,
+          arguments: {
+            HEADER: {
+              type: Scratch.ArgumentType.STRING,
+            },
+            VALUE: {
+              type: Scratch.ArgumentType.STRING,
+            }
+          }
         }
       ],
       menus: {
         ENCODINGS: {
           items: [
-            {text: Scratch.translate("base 64"), value: "b64"},
+            ...(!!vm.agBuffer ? [ { text: Scratch.translate("buffer"), value:"buf" } ] : []),
             {text: Scratch.translate("text"), value: "txt"},
-            {text: Scratch.translate("bytes"), value: "arr"},
+            {text: Scratch.translate("object"), value: "obj"},
+            {text: Scratch.translate("array"), value: "arr"},
+            {text: Scratch.translate("base 64"), value: "b64"},
+            {text: Scratch.translate("bytes"), value: "byt"},
             {text: Scratch.translate("hex"), value: "hex"},
           ]
         },
@@ -175,6 +334,100 @@ class Requests {
             {text: Scratch.translate("url"), value:"url"},
             {text: Scratch.translate("mime type"), value: "type"},
           ]
+        },
+        REQUEST_PROPS: {
+          items: [
+            {text: Scratch.translate("url"), value:"url"},
+            {text: Scratch.translate("mime type"), value: "type"},
+          ]
+        }
+      }
+    }
+  }
+
+  getCompileInfo() {
+    return {
+      ir: {
+        request_builder: (generator, block) => {
+          generator.script.yields = true;
+          return {
+            kind: "input",
+            substack: generator.descendSubstack(block, "SUBSTACK"),
+            url: generator.descendInputOfBlock(block, "URL"),
+          };
+        },
+        builder_set_current_body: (generator, block) => (
+          {
+            kind: "stack",
+            body: generator.descendInputOfBlock(block, "BODY"),
+          }
+        ),
+        current_request: () => (
+          {
+            kind: "input",
+          }
+        ),
+        get_response_property: (generator, block) => (
+          {
+            kind: "input",
+            prop: block.fields.PROP.value,
+            object: generator.descendInputOfBlock(block, "RESPONSE"),
+          }
+        ),
+        get_response_headers: (generator, block) => (
+          {
+            kind: "input",
+            object: generator.descendInputOfBlock(block, "RESPONSE"),
+          }
+        ),
+      },
+      js: {
+        request_builder: (node, compiler, imports) => {
+          const copy_source  = compiler.source;
+          const url = "(" + compiler.descendInput(node.url).asString() + ")";
+          compiler.source    = "(yield* (function*(__s0gRequests_current_builder_object__) {";
+          compiler.descendStack(node.substack, new imports.Frame(false, "s0gRequests", true));
+          compiler.source   += "return __s0gRequests_current_builder_object__;"
+          compiler.source   += `})(new vm.s0gRequests.RequestType(${url})))`;
+          const stack_source = compiler.source;
+          compiler.source = copy_source;
+          return new imports.TypedInput(stack_source, imports.TYPE_UNKNOWN);
+        },
+        current_request: (node, compiler, imports) => {
+          if (!compiler.currentFrame?.importantData?.parents?.includes?.("s0gRequests"))
+            return new imports.TypedInput("(null)", imports.TYPE_UNKNOWN);
+          return new imports.TypedInput("(__s0gRequests_current_builder_object__)", imports.TYPE_UNKNOWN)
+        },
+        builder_set_current_body: (node, compiler, imports) => {
+          if (!compiler.currentFrame?.importantData?.parents?.includes?.("s0gRequests"))
+            return;
+          compiler.source += "__s0gRequests_current_builder_object__.set_body(";
+          compiler.source += compiler.descendInput(node.body).asUnknown();
+          compiler.source += ");\n";
+        },
+        get_response_property: (node, compiler, imports) => {
+          const object = "(" + compiler.descendInput(node.object).asUnknown() + ")";
+          switch (node.prop) {
+            case "status":
+              return new imports.TypedInput(`${object}.status`, imports.TYPE_NUMBER);
+            case "status_text":
+              return new imports.TypedInput(`${object}.status_text`, imports.TYPE_STRING);
+            case "size":
+              return new imports.TypedInput(`${object}.size`, imports.TYPE_NUMBER);
+            case "url":
+              return new imports.TypedInput(`${object}.url`, imports.TYPE_STRING);
+            case "type":
+              return new imports.TypedInput(`${object}.type`, imports.TYPE_STRING);
+            default:
+              return new imports.TypedInput("null", imports.TYPE_UNKNOWN);
+          }
+        },
+        get_response_headers: (node, compiler, imports) => {
+          const object = compiler.descendInput(node.object).asUnknown();
+          return new imports.TypedInput(
+            `(vm.dogeiscutObject.Type.toObject((${object}).headers))`,
+            imports.TYPE_UNKNOWN
+          )
         }
       }
     }
@@ -192,30 +445,50 @@ class Requests {
         return await RESPONSE.base64();
       case "txt":
         return await RESPONSE.text();
-      case "arr":
-        return await RESPONSE.bytes();
+      case "byt":
+        return new vm.jwArray.Type([...(await RESPONSE.bytes())]);
       case "hex":
         return await RESPONSE.hex();
+      case "buf":
+        return new vm.agBuffer.Type(await RESPONSE.arrayBuffer());
+      case "obj":
+        return vm.dogeiscutObject.Type.toObject(JSON.parse(await RESPONSE.text()));
+      case "arr":
+        return new vm.jwArray.Type(JSON.parse(await RESPONSE.text()));
+      default:
+        return null;
     }
-  }
-  get_response_property({PROP, RESPONSE}) {
-    switch (PROP) {
-      case "status":
-        return RESPONSE.status;
-      case "status_text":
-        return RESPONSE.status_text;
-      case "size":
-        return RESPONSE.size;
-      case "url":
-        return RESPONSE.url;
-      case "type":
-        return RESPONSE.type;
-    }
-  }
-  get_response_headers({RESPONSE}) {
-    return vm.dogeiscutObject.Type.toObject(RESPONSE.headers);
   }
 }
+
+const dependencies = [
+  "jwArray",
+  "dogeiscutObject",
+  "agBuffer", // OPTIONAL
+];
+
+vm.on("EXTENSION_ADDED", info => {
+  const is_dependency = dependencies.includes(info.id);
+  if (!is_dependency) return;
+  try {
+    vm.extensionManager.refreshBlocks(self_id);
+  } catch (_) {}
+  // if we fail here, that means the extension hasn't loaded yet,
+  // so refreshing it is pointless.
+});
+
+if (!vm.jwArray)
+  vm.extensionManager.loadExtensionURL("jwArray");
+
+if (!vm.dogeiscutObject)
+  vm.extensionManager.loadExtensionURL(
+    "https://extensions.penguinmod.com/extensions/DogeisCut/dogeiscutObject.js"
+  );
+
+vm.s0gRequests = {
+  RequestType,
+  ResponseType,
+};
 
 Scratch.extensions.register(new Requests());
 
